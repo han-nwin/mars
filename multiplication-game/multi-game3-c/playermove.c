@@ -21,6 +21,7 @@ int player_turn() {
     if (row == -1 || get_ownership(row, col) != 0) {
         return 0;
     }
+    printf("row: %d, col: %d\n", row, col);
 
     set_ownership(row, col, 1);
     return 1;
