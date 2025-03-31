@@ -1,0 +1,1 @@
+gcc -o game main.c print.c game.c wincheck.c playermove.c computermove.c
