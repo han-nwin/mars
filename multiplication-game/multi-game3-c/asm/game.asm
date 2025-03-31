@@ -1,4 +1,7 @@
 .data
+debug_address: .asciiz "Address in get_ownership: 0x"
+space: .asciiz " "
+newline: .asciiz "\n"
 .globl GRID
 GRID:   .word 1, 2, 3, 4, 5, 6      # 6x6 grid of multiplication products
         .word 7, 8, 9, 10, 12, 14
@@ -55,7 +58,17 @@ get_ownership:
     addu $t0, $t0, $t1               # Offset = row * 24 + col * 4
     la $t1, ownership                # Load ownership base address
     addu $t0, $t1, $t0               # Address = ownership + offset
-    lw $v0, 0($t0)                   # Load ownership value into $v0
+# Debug print
+la $a0, debug_address
+li $v0, 4
+syscall
+move $a0, $t0
+li $v0, 34                       # Print hex
+syscall
+la $a0, newline
+li $v0, 4
+syscall
+lw $v0, 0($t0)                   # Load ownership value into $v0
     jr $ra                           # Return value in $v0
 
 .globl set_ownership
