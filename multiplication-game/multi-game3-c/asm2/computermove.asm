@@ -7,13 +7,6 @@
     newline:   .asciiz "\n"
 
 .text
-    #.extern get_top_marker 4
-    #.extern get_bottom_marker 4
-    #.extern set_bottom_marker 4    # Changed to bottom marker
-    #.extern find_cell 4
-    #.extern get_ownership 4
-    #.extern set_ownership 4
-
     .globl computer_turn
 
 computer_turn:
@@ -67,7 +60,7 @@ computer_turn:
     jal get_ownership
     bnez $v0, invalid_move
 
-    # Print row/col (like player_turn, for debug)
+    # Print row/col (for debug)
     la $a0, row_msg
     li $v0, 4
     syscall
