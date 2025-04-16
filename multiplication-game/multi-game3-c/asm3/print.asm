@@ -4,7 +4,7 @@
     separator: .asciiz "|"        # Vertical bar to separate grid cells
     space:     .asciiz " "        # Single space for padding numbers
     newline:   .asciiz "\n"       # Newline character for row breaks
-    num_line:  .asciiz "Number line: 1 2 3 4 5 6 7 8 9\n"  # Static number line string
+    num_line:  .asciiz "Select nums: 1 2 3 4 5 6 7 8 9\n"  # Static number line string
     top_ptr:   .asciiz "v"        # Down arrow for top marker position
     bottom_ptr:.asciiz "^"        # Up arrow for bottom marker position
 
