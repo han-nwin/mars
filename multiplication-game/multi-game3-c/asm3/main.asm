@@ -15,11 +15,11 @@
     bottom_marker: .word 1          # Initial bottom marker position (1-9)
 
     # Strings for game output
-    comp_row_msg: .asciiz "comp row: "  # Label for computerâ€™s row coordinate
-    comp_col_msg: .asciiz "comp col: "  # Label for computerâ€™s column coordinate
+    comp_row_msg: .asciiz "comp row: "  # Label for computer’s row coordinate
+    comp_col_msg: .asciiz "comp col: "  # Label for computer’s column coordinate
     space:        .asciiz " "           # Space for formatting
     newline:      .asciiz "\n"          # Newline for line breaks
-    pick_msg:     .asciiz "comp pick: " # Label for computerâ€™s chosen number
+    pick_msg:     .asciiz "comp pick: " # Label for computer’s chosen number
     player_win:   .asciiz "You win!\n"  # Victory message for player
     comp_win:     .asciiz "Computer wins!\n"  # Victory message for computer
     tie_msg:      .asciiz "It's a tie!\n"     # Message for a draw
@@ -27,7 +27,7 @@
 .text
     .globl main                     # Main entry point of the game
 
-# main: Main game loopâ€”seeds random, initializes, alternates player and computer turns
+# main: Main game loop—seeds random, initializes, alternates player and computer turns
 main:
     # Seed the random number generator
     li $v0, 30                      # Syscall to get system time
@@ -41,7 +41,7 @@ main:
     jal display_game_state          # Show initial board
 
 game_loop:
-    jal player_turn                 # Execute playerâ€™s turn
+    jal player_turn                 # Execute player’s turn
     move $t0, $v0                   # Store result (1 = success, 0 = invalid)
     beqz $t0, game_loop             # If invalid move, retry player turn
     move $a0, $t0                   # Load result (1) to print
@@ -52,20 +52,20 @@ game_loop:
     syscall
     jal display_game_state          # Update and show board
 
-    li $a0, 1                       # Player 1â€™s number
+    li $a0, 1                       # Player 1’s number
     jal check_win                   # Check if player won
     beq $v0, 1, player_wins         # If win ($v0 = 1), jump to victory
     jal has_valid_moves             # Check if any valid moves remain
-    beqz $v0, tie_game              # If no valid moves, declare ti
+    beqz $v0, tie_game              # If no valid moves, declare tie
     jal is_board_full               # Check if board is full
     beq $v0, 1, tie_game            # If full ($v0 = 1), jump to tie
 
 computer_loop:
-    jal computer_turn               # Execute computerâ€™s turn
+    jal computer_turn               # Execute computer’s turn
     move $t0, $v0                   # Store result (1 = success, 0 = invalid)
     beqz $t0, computer_loop         # If invalid move, retry computer turn
     jal display_game_state          # Update and show board
-    jal get_bottom_marker           # Get computerâ€™s chosen marker (for spacing)
+    jal get_bottom_marker           # Get computer’s chosen marker (for spacing)
     la $a0, space                   # Load space
     li $v0, 4                       # Syscall to print string
     syscall
@@ -73,27 +73,77 @@ computer_loop:
     li $v0, 4
     syscall
 
-    li $a0, 2                       # Player 2â€™s number (computer)
+    li $a0, 2                       # Player 2’s number (computer)
     jal check_win                   # Check if computer won
     beq $v0, 1, comp_wins           # If win ($v0 = 1), jump to victory
     jal has_valid_moves             # Check if any valid moves remain
-    beqz $v0, tie_game              # If no valid moves, declare ti
+    beqz $v0, tie_game              # If no valid moves, declare tie
     jal is_board_full               # Check if board is full
     beq $v0, 1, tie_game            # If full ($v0 = 1), jump to tie
 
-    j game_loop                     # Back to playerâ€™s turn
+    j game_loop                     # Back to player’s turn
 
 player_wins:
+    # Play win sound (ascending notes)
+    li $v0, 31        # MIDI note
+    li $a0, 72        # C5
+    li $a1, 300       # 300ms
+    li $a2, 0         # Piano
+    li $a3, 127       # Max volume
+    syscall
+    li $v0, 31
+    li $a0, 76        # E5
+    li $a1, 300
+    li $a2, 0
+    li $a3, 127
+    syscall
+    li $v0, 31
+    li $a0, 79        # G5
+    li $a1, 300
+    li $a2, 0
+    li $a3, 127
+    syscall
+
     la $a0, player_win              # Load player win message
     li $v0, 4                       # Syscall to print string
     syscall
     j end_game                      # End the game
+
 comp_wins:
+    # Play win sound (same as player win)
+    li $v0, 31
+    li $a0, 72
+    li $a1, 300
+    li $a2, 0
+    li $a3, 127
+    syscall
+    li $v0, 31
+    li $a0, 76
+    li $a1, 300
+    li $a2, 0
+    li $a3, 127
+    syscall
+    li $v0, 31
+    li $a0, 79
+    li $a1, 300
+    li $a2, 0
+    li $a3, 127
+    syscall
+
     la $a0, comp_win                # Load computer win message
     li $v0, 4
     syscall
     j end_game                      # End the game
+
 tie_game:
+    # Play tie sound (single low note)
+    li $v0, 31
+    li $a0, 60        # C4, lower pitch
+    li $a1, 800       # 800ms
+    li $a2, 0
+    li $a3, 127
+    syscall
+
     la $a0, tie_msg                 # Load tie message
     li $v0, 4
     syscall

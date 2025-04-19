@@ -25,7 +25,15 @@ player_turn:
     li $v0, 5                       # Syscall code to read integer
     syscall                         # Get user input (1-9)
     move $s0, $v0                   # Store input as new_pos in $s0
-
+    
+    # Play sound for player move
+    li $v0, 31                      # Syscall for MIDI note (async)
+    li $a0, 72                      # Pitch (C5, high note)
+    li $a1, 1000                     # Duration (1000ms)
+    li $a2, 0                       # Instrument (piano)
+    li $a3, 127                     # Max volume
+    syscall                         # Execute the MIDI note
+    
     # Validate user input: Must be between 1 and 9
     li $t0, 1                       # Minimum valid input
     blt $s0, $t0, invalid_input     # If new_pos < 1, jump to invalid
