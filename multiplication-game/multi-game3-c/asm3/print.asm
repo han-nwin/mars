@@ -1,28 +1,65 @@
 .data
-    x_mark:    .asciiz " X"       # String for player 1â€™s mark (X with leading space)
-    o_mark:    .asciiz " O"       # String for player 2â€™s mark (O with leading space)
-    separator: .asciiz "|"        # Vertical bar to separate grid cells
+    x_mark:    .asciiz " X"       # String for player 1’s mark (X with leading space)
+    o_mark:    .asciiz " O"       # String for player 2’s mark (O with leading space)
+    separator: .asciiz "|"        # Vertical line for cell separation
     space:     .asciiz " "        # Single space for padding numbers
     newline:   .asciiz "\n"       # Newline character for row breaks
-    num_line:  .asciiz "Select nums: 1 2 3 4 5 6 7 8 9\n"  # Static number line string
+    num_line:  .asciiz "Select nums: 1 2 3 4 5 6 7 8 9\n"  # Original number line string
     top_ptr:   .asciiz "v"        # Down arrow for top marker position
     bottom_ptr:.asciiz "^"        # Up arrow for bottom marker position
+    h_border:  .asciiz "-"        # Horizontal line for row separation
+    corner:    .asciiz "+"        # Corner and intersection character
 
 .text
     .globl display_game_state     # Global function to display the game board
 
-# display_game_state: Prints the 6x6 game grid, number line, and markers
+# display_game_state: Prints the 6x6 game grid with standard ASCII borders, number line, and markers
 # No inputs/outputs via registers; uses syscalls to print directly
 display_game_state:
     # Save registers to stack per MIPS convention
-    addi $sp, $sp, -12        # Allocate 12 bytes for 3 registers
+    addi $sp, $sp, -16        # Allocate 16 bytes for 4 registers
     sw $ra, 0($sp)            # Save return address
     sw $s0, 4($sp)            # Save $s0 (row counter)
     sw $s1, 8($sp)            # Save $s1 (column counter)
+    sw $s2, 12($sp)           # Save $s2 (temp for border printing)
+
+    # Print top border: +---------+
+    la $a0, corner            # Print top-left corner
+    li $v0, 4
+    syscall
+    li $s1, 0                 # Counter for horizontal lines
+top_border_loop:
+    la $a0, h_border          # Print horizontal line segment
+    li $v0, 4
+    syscall
+    la $a0, h_border          # Double for 2-char cell width
+    li $v0, 4
+    syscall
+    la $a0, corner            # Print intersection
+    li $v0, 4
+    syscall
+    addi $s1, $s1, 1
+    li $t0, 5                 # 5 separators for 6 columns
+    blt $s1, $t0, top_border_loop
+    la $a0, h_border
+    li $v0, 4
+    syscall
+    la $a0, h_border
+    li $v0, 4
+    syscall
+    la $a0, corner            # Print top-right corner
+    li $v0, 4
+    syscall
+    la $a0, newline
+    li $v0, 4
+    syscall
 
     # Print the 6x6 grid
     li $s0, 0                 # Initialize row counter to 0
 grid_row_loop:
+    la $a0, separator         # Print left vertical border
+    li $v0, 4
+    syscall
     li $s1, 0                 # Initialize column counter to 0
 grid_col_loop:
     move $a0, $s0             # Set row argument for get_ownership
@@ -62,22 +99,84 @@ print_o:
     li $v0, 4                 # Syscall to print string
     syscall
 after_print:
-    li $t0, 5                 # Last column index (0-5, so 5 is last)
-    beq $s1, $t0, skip_separator  # Skip separator after last column
-    la $a0, separator         # Load "|" string
-    li $v0, 4                 # Syscall to print string
+    la $a0, separator         # Print vertical separator
+    li $v0, 4
     syscall
-skip_separator:
     addi $s1, $s1, 1          # Move to next column
     li $t0, 6                 # Grid width is 6
     blt $s1, $t0, grid_col_loop  # If col < 6, continue row
 
-    la $a0, newline           # Load newline string
-    li $v0, 4                 # Syscall to print string
+    la $a0, newline           # Newline after row
+    li $v0, 4
     syscall
+
+    # Print horizontal separator between rows (except after last row)
+    li $t0, 5                 # Last row index
+    beq $s0, $t0, skip_h_separator
+    la $a0, corner            # Print left intersection
+    li $v0, 4
+    syscall
+    li $s1, 0                 # Reset column counter
+mid_border_loop:
+    la $a0, h_border          # Print horizontal line
+    li $v0, 4
+    syscall
+    la $a0, h_border
+    li $v0, 4
+    syscall
+    la $a0, corner            # Print intersection
+    li $v0, 4
+    syscall
+    addi $s1, $s1, 1
+    li $t0, 5                 # 5 separators
+    blt $s1, $t0, mid_border_loop
+    la $a0, h_border
+    li $v0, 4
+    syscall
+    la $a0, h_border
+    li $v0, 4
+    syscall
+    la $a0, corner            # Print right intersection
+    li $v0, 4
+    syscall
+    la $a0, newline
+    li $v0, 4
+    syscall
+skip_h_separator:
     addi $s0, $s0, 1          # Move to next row
     li $t0, 6                 # Grid height is 6
     blt $s0, $t0, grid_row_loop  # If row < 6, print next row
+
+    # Print bottom border: +---------+
+    la $a0, corner            # Print bottom-left corner
+    li $v0, 4
+    syscall
+    li $s1, 0
+bottom_border_loop:
+    la $a0, h_border
+    li $v0, 4
+    syscall
+    la $a0, h_border
+    li $v0, 4
+    syscall
+    la $a0, corner            # Print intersection
+    li $v0, 4
+    syscall
+    addi $s1, $s1, 1
+    li $t0, 5
+    blt $s1, $t0, bottom_border_loop
+    la $a0, h_border
+    li $v0, 4
+    syscall
+    la $a0, h_border
+    li $v0, 4
+    syscall
+    la $a0, corner            # Print bottom-right corner
+    li $v0, 4
+    syscall
+    la $a0, newline
+    li $v0, 4
+    syscall
 
     # Print the number line with top marker
     la $a0, newline           # Add blank line before number line
@@ -86,8 +185,8 @@ skip_separator:
     jal get_top_marker        # Get top marker position (1-9)
     move $t0, $v0             # Store top marker position
     addi $t0, $t0, -1         # Adjust to 0-8 for indexing
-    sll $t0, $t0, 1           # Multiply by 2 (each position takes 2 spaces)
-    addi $t0, $t0, 13         # Add 13 (length of "Number line: " before numbers)
+    sll $t0, $t0, 1           # Multiply by 2 (each number takes 2 spaces)
+    addi $t0, $t0, 13         # Add 13 (length of "Select nums: ")
     li $t1, 0                 # Initialize space counter
 top_space_loop:
     beq $t1, $t0, print_top_ptr  # If counter matches offset, print arrow
@@ -104,7 +203,7 @@ print_top_ptr:
     li $v0, 4
     syscall
 
-    la $a0, num_line          # Print "Number line: 1 2 3 4 5 6 7 8 9"
+    la $a0, num_line          # Print original number line
     li $v0, 4
     syscall
 
@@ -134,5 +233,6 @@ print_bottom_ptr:
     lw $ra, 0($sp)            # Restore return address
     lw $s0, 4($sp)            # Restore $s0
     lw $s1, 8($sp)            # Restore $s1
-    addi $sp, $sp, 12         # Deallocate stack space
+    lw $s2, 12($sp)           # Restore $s2
+    addi $sp, $sp, 16         # Deallocate stack space
     jr $ra                    # Return to caller
