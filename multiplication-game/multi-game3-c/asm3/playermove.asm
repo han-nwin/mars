@@ -9,7 +9,7 @@
 .text
     .globl player_turn              # Global function for player’s turn
 
-# player_turn: Handles player’s turn—gets input, validates, updates marker, claims cell
+# player_turn: Handles player's turn gets input, validates, updates marker, claims cell
 # Output: $v0 = 1 if move succeeds, 0 if invalid input or move
 player_turn:
     addi $sp, $sp, -20              # Allocate 20 bytes on stack for 5 words
